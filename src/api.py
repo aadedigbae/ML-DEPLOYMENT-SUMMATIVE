@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import joblib
 import pandas as pd
 import os
@@ -14,8 +14,8 @@ MODEL_PATH = os.path.join(BASE_DIR, "models/model.pkl")
 model = joblib.load(MODEL_PATH)
 
 # Load preprocessing objects (encoder and scaler)
-ENCODER_PATH = os.path.join(BASE_DIR, "models/encoder.pkl")  # One-hot or label encoder
-SCALER_PATH = os.path.join(BASE_DIR, "models/scaler.pkl")  # StandardScaler or MinMaxScaler
+ENCODER_PATH = os.path.join(BASE_DIR, "models/encoder.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "models/scaler.pkl")
 
 encoder = joblib.load(ENCODER_PATH)
 
@@ -32,6 +32,11 @@ numerical_features = FEATURE_COLUMNS
 
 print("Top features used in the API:", FEATURE_COLUMNS)
 
+# Route to serve frontend
+@app.route('/')
+def home():
+    return render_template('index.html', features=FEATURE_COLUMNS)
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Accepts JSON input and returns churn prediction"""
@@ -39,18 +44,24 @@ def predict():
         data = request.get_json()
         df = pd.DataFrame([data])
 
-        # Debug: Print input data and expected features
+        # Debug
         print("Input data:", df)
         print("Expected features:", FEATURE_COLUMNS)
 
-        # Ensure all features exist in the dataframe
+        # Ensure all features exist
         df = df.reindex(columns=FEATURE_COLUMNS, fill_value=0)
 
-        # Scale numerical features
-        df[FEATURE_COLUMNS] = scaler.transform(df[FEATURE_COLUMNS])
+        # Debug: Check if all features are present
+        print("Reindexed data:", df)
 
-        # Make prediction
-        prediction = model.predict(df)[0]
+        # Scale numerical features
+        df_scaled = pd.DataFrame(scaler.transform(df[FEATURE_COLUMNS]), columns=FEATURE_COLUMNS)
+
+        # Convert to NumPy array to remove feature names
+        df_array = df.to_numpy()
+
+        # Predict
+        prediction = model.predict(df_scaled)[0]
 
         return jsonify({'Churn Prediction': int(prediction)})
 

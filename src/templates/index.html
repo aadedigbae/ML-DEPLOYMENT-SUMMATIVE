@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer Churn Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    h2 {
+      color: #2c3e50;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      padding: 5px;
+      width: 200px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #219150;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Customer Churn Prediction</h2>
+
+  <form id="predictionForm">
+    <div id="inputFields"></div>
+    <button type="submit">Predict</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const featureList = JSON.parse('{{ features | tojson | safe }}');
+  
+    const inputFieldsDiv = document.getElementById('inputFields');
+    featureList.forEach(feature => {
+      const label = document.createElement('label');
+      label.textContent = `${feature}:`;
+  
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = feature;
+      input.name = feature;
+  
+      inputFieldsDiv.appendChild(label);
+      inputFieldsDiv.appendChild(input);
+    });
+  
+    document.getElementById('predictionForm').addEventListener('submit', async function (event) {
+      event.preventDefault();
+  
+      const inputData = {};
+      featureList.forEach(feature => {
+        inputData[feature] = parseFloat(document.getElementById(feature).value) || 0;
+      });
+  
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inputData)
+      });
+  
+      const result = await response.json();
+      document.getElementById('result').innerText = 
+        result.error ? `❌ Error: ${result.error}` : `✅ Churn Prediction: ${result["Churn Prediction"]}`;
+    });
+  </script>
+  
+</body>
+</html>

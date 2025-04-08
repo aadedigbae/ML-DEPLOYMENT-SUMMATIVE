@@ -50,6 +50,8 @@ X_val = scaler.transform(X_val)
 smote = SMOTE(random_state=42)
 X_train, y_train = smote.fit_resample(X_train, y_train)
 
+X_train = pd.DataFrame(X_train, columns=FEATURE_COLUMNS)
+
 # Train model
 model = RandomForestClassifier(n_estimators=100, random_state=42, min_samples_split=10, min_samples_leaf=5)
 model.fit(X_train, y_train)
@@ -73,8 +75,11 @@ N = 10
 top_features = [FEATURE_COLUMNS[i] for i in sorted_indices[-N:]]
 print(f"Top {N} features selected:", top_features)
 
+# Update FEATURE_COLUMNS to match the top features
+FEATURE_COLUMNS = top_features
+
 # Filter the dataset to include only the top features
-X = X[top_features]
+X = X[FEATURE_COLUMNS]
 
 # Split into training and validation sets
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -87,6 +92,8 @@ X_val = scaler.transform(X_val)
 # Apply SMOTE for oversampling
 smote = SMOTE(random_state=42)
 X_train, y_train = smote.fit_resample(X_train, y_train)
+
+X_train = pd.DataFrame(X_train, columns=FEATURE_COLUMNS)
 
 # Train model
 model = RandomForestClassifier(n_estimators=100, random_state=42, min_samples_split=10, min_samples_leaf=5)
@@ -110,8 +117,14 @@ print("Scaler feature names (if available):", getattr(scaler, "feature_names_in_
 
 # Plot feature importance
 plt.figure(figsize=(10, 8))
-plt.barh(range(len(sorted_indices)), feature_importances[sorted_indices], align='center')
-plt.yticks(range(len(sorted_indices)), [FEATURE_COLUMNS[i] for i in sorted_indices])
+
+# Use only the top N features for plotting
+top_sorted_indices = sorted_indices[-N:]  # Indices of the top N features
+top_feature_importances = feature_importances[top_sorted_indices]  # Importance values for the top N features
+top_feature_names = [FEATURE_COLUMNS[i] for i in range(len(FEATURE_COLUMNS))]  # Names of the top N features
+
+plt.barh(range(len(top_sorted_indices)), top_feature_importances, align='center')
+plt.yticks(range(len(top_sorted_indices)), top_feature_names)
 plt.xlabel("Feature Importance")
 plt.title("Feature Importance in Random Forest")
 plt.show()
@@ -119,3 +132,4 @@ plt.show()
 # Load and inspect the model
 model = joblib.load(MODEL_PATH)
 print("Features the model was trained on:", getattr(model, "feature_names_in_", "Not available"))
+

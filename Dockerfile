@@ -1,23 +1,23 @@
-# Use an official lightweight Python image as base
-FROM python:3.9-slim AS base
+# Use a lightweight Python base image
+FROM python:3.10-slim
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy all project files into the container
+# Copy project files into the container
 COPY . .
 
-# Install necessary Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip
+RUN pip install --upgrade pip
 
-# Expose the API port (Flask default is 5000)
+# Avoid pywin32 which causes issues in Linux containers
+RUN grep -v "pywin32" requirements.txt > temp_requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r temp_requirements.txt && rm temp_requirements.txt
+
+# Expose port
 EXPOSE 5000
 
-# Development stage
-FROM base AS development
+# Run the Flask app
 CMD ["python", "src/api.py"]
-
-# Production stage with Uvicorn
-FROM base AS production
-RUN pip install --no-cache-dir uvicorn
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "5000"]
