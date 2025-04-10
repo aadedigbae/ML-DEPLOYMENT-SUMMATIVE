@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 import os
 import joblib
+from imblearn.over_sampling import SMOTE
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 TRAIN_PATH = os.path.join(BASE_DIR, "data/train/churn_train.csv")
@@ -44,20 +45,25 @@ def remove_leaking_features(df, leaking_features):
     """Removes leaking features from the dataset."""
     return df.drop(columns=leaking_features, errors='ignore')
 
-def preprocess_pipeline(file_path, target_column, numerical_columns, leaking_features=None):
-    """
-    Complete preprocessing pipeline: load, clean, encode, scale, and split data.
-    Returns preprocessed features (X) and target (y).
-    """
-    df = load_data(file_path)
+def preprocess_data(df, target_column, leaking_features):
+    """Preprocess the dataset by encoding, scaling, and removing leaking features."""
     df = clean_data(df)
     df = encode_data(df)
     if leaking_features:
         df = remove_leaking_features(df, leaking_features)
     X = df.drop(columns=[target_column])
     y = df[target_column]
-    X = scale_data(X, numerical_columns)
     return X, y
+
+def scale_and_balance_data(X, y):
+    """Scale numerical features and apply SMOTE for class balancing."""
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    smote = SMOTE(random_state=42)
+    X_balanced, y_balanced = smote.fit_resample(X_scaled, y)
+
+    return X_balanced, y_balanced, scaler
 
 if __name__ == "__main__":
     print("Starting data preprocessing...")  # Debugging statement
@@ -76,16 +82,16 @@ if __name__ == "__main__":
 
     # Preprocess training data
     print(f"Preprocessing training data from: {TRAIN_PATH}")
-    X_train, y_train = preprocess_pipeline(
-        TRAIN_PATH, target_column='Churn', numerical_columns=numerical_columns, leaking_features=leaking_features
-    )
+    df_train = load_data(TRAIN_PATH)
+    X_train, y_train = preprocess_data(df_train, target_column='Churn', leaking_features=leaking_features)
+    X_train, y_train, scaler = scale_and_balance_data(X_train, y_train)
     print(f"Training data preprocessed. Features shape: {X_train.shape}, Target shape: {y_train.shape}")
 
     # Preprocess testing data
     print(f"Preprocessing testing data from: {TEST_PATH}")
-    X_test, y_test = preprocess_pipeline(
-        TEST_PATH, target_column='Churn', numerical_columns=numerical_columns, leaking_features=leaking_features
-    )
+    df_test = load_data(TEST_PATH)
+    X_test, y_test = preprocess_data(df_test, target_column='Churn', leaking_features=leaking_features)
+    X_test = scaler.transform(X_test)
     print(f"Testing data preprocessed. Features shape: {X_test.shape}, Target shape: {y_test.shape}")
 
     # Ensure output directories exist

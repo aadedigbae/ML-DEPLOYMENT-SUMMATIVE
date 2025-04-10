@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customer Churn Prediction</title>
   <style>
     body {
@@ -38,13 +39,32 @@
 </head>
 <body>
   <h2>Customer Churn Prediction</h2>
-
   <form id="predictionForm">
     <div id="inputFields"></div>
     <button type="submit">Predict</button>
   </form>
 
   <div id="result"></div>
+
+  <!-- Form for uploading bulk data -->
+  <h2>Upload Bulk Data for Retraining</h2>
+  <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+    <label for="file">Choose a CSV file:</label>
+    <input type="file" id="file" name="file" required>
+    <button type="submit">Upload</button>
+  </form>
+
+  <p id="uploadMessage"></p>
+
+  <!-- Form for triggering retraining -->
+  <h2>Trigger Retraining</h2>
+  <form id="retrainForm" action="/retrain" method="post">
+    <label for="filePath">File Path:</label>
+    <input type="text" id="filePath" name="file_path" placeholder="Enter file path" required>
+    <button type="submit">Retrain Model</button>
+  </form>
+
+  <p id="retrainMessage"></p>
 
   <script>
     const featureList = JSON.parse('{{ features | tojson | safe }}');
@@ -80,6 +100,50 @@
       const result = await response.json();
       document.getElementById('result').innerText = 
         result.error ? `❌ Error: ${result.error}` : `✅ Churn Prediction: ${result["Churn Prediction"]}`;
+    });
+
+    // Handle file upload
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadMessage = document.getElementById('uploadMessage');
+    uploadForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(uploadForm);
+
+      const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      if (result.file_path) {
+        uploadMessage.textContent = result.message;
+        document.getElementById('filePath').value = result.file_path; // Auto-fill file path for retraining
+      } else {
+        uploadMessage.textContent = 'Error: ' + result.error;
+      }
+    });
+
+    // Handle retraining
+    const retrainForm = document.getElementById('retrainForm');
+    const retrainMessage = document.getElementById('retrainMessage');
+    retrainForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const filePath = document.getElementById('filePath').value;
+
+      const response = await fetch('/retrain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ file_path: filePath })
+      });
+
+      const result = await response.json();
+      if (result.message) {
+        retrainMessage.textContent = result.message;
+      } else {
+        retrainMessage.textContent = 'Error: ' + result.error;
+      }
     });
   </script>
   
