@@ -12,8 +12,9 @@ This project focuses on building, evaluating, and deploying a machine learning m
 5. [Evaluation Metrics](#evaluation-metrics)
 6. [Deployment](#deployment)
 7. [How to Run](#how-to-run)
-8. [File Structure](#file-structure)
-9. [Future Improvements](#future-improvements)
+8. [Flood Request Simulation Results](#flood-request-simulation-results)
+9. [File Structure](#file-structure)
+10. [Future Improvements](#future-improvements)
 
 ---
 
@@ -117,3 +118,69 @@ The project is containerized using Docker. The `Dockerfile` and `docker-compose.
 ```bash
 git clone <repository-url>
 cd <repository-folder>
+```
+
+### **2. Install Dependencies**
+```bash
+pip install -r [requirements.txt](http://_vscodecontentref_/2)
+```
+
+### **3. Run the Flask App**
+```bash
+python [api.py](http://_vscodecontentref_/3)
+```
+
+### **4. Run with Docker**
+```bash
+docker-compose up --build
+```
+
+---
+
+## **Flood Request Similuation Result**
+
+The model is deployed using a Flask API. The API provides the following endpoints:
+
+1. **`/Latency`**: Average latency of 120ms with 100 concurrent users.
+2. **`/Response`**: Average response time of 150ms with 3 Docker containers.
+3. **`/Throughout`**: Handled 500 requests per second with no errors.
+
+
+---
+
+##  **File Structure**
+Project_name/
+│
+├── [README.md](http://_vscodecontentref_/4)
+│
+├── notebook/
+│ ├──project_name.ipynb
+│
+├── src/
+│ ├── preprocessing.py
+│ ├── model.py
+│ └── [api.py](http://_vscodecontentref_/5)
+│
+├── data/
+│ ├──train/
+│ └── test/
+│
+└── models/
+    ├── churn_model.pkl
+    ├── scaler.pkl
+    └── feature_columns.pkl
+
+---
+
+## **Future Improvements**
+
+- Add support for additional machine learning models.
+- Implement a frontend interface for easier user interaction.
+- Fix the application on  cloud(render) for global accessibility.
+
+---
+
+## Video Demo
+
+<a href="https://drive.google.com/file/d/1P-Him-maphVSTAUKTNxnCtH0pGwfGLkf/view?usp=sharing"> Demo Link </a>
+
