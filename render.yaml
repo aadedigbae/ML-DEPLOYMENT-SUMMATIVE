@@ -1,0 +1,8 @@
+# filepath: c:\Users\PC\Documents\ML-DEPLOYMENT-SUMMATIVE\render.yaml
+services:
+  - type: web
+    name: churn-prediction-api
+    env: python
+    buildCommand: pip install --upgrade pip && pip install flask && pip install -r requirements.txt
+    startCommand: python src/api.py
+    plan: free
